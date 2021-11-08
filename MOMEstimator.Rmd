@@ -1,0 +1,485 @@
+---
+title: "Method of Moment Estimators"
+output: html_notebook
+---
+
+<h2>Import Libraries</h2>
+
+```{r}
+library(MASS) # to use mvrnorm function to generate random sample from multivariate distribution
+```
+
+
+<h2>Functions to Compute Method of Moment Estimators</h2>
+
+<h4>Note:</h4>
+sample_moment1 = mean(sample_data) <br>
+sample_moment2 = mean(sample_data ^ 2) <br>
+<br>
+theoretical_moment1 = E(X) = theoretical_mean <br>
+theoretical_moment2 = E(X ^ 2) = theoretical_variance - theoretical_moment1 ^ 2 <br>
+<br>
+<b>Assumption made in Method of Moments: </b> <br>
+Sample moments are equal to theoretical moments of the distribution it is assumed to be a part of. <br>
+<br>
+Therefore, <br>
+<br>
+theoretical_moment1 = sample_moment1  --- eqn [1] <br>
+theoretical_moment2 = sample_moment2  --- eqn [2] <br>
+<br>
+Solving eqn [1]: <br>
+<br>
+   theoretical_moment1 = mean(sample_data) <br>
+=> theoretical_mean    = mean(sample_data) --- eqn [3] <br>
+<br>
+Solving eqn [2]: <br>
+<br>
+   theoretical_variance - theoretical_moment1 ^ 2 = mean(sample_data ^ 2) <br>
+=> theoretical_variance = mean(sample_data ^ 2) + theoretical_moment1 ^ 2 <br>
+<br>
+Substituting eqn [3]: <br>
+<br>
+=> theoretical_variance = mean(sample_data ^ 2) + mean(sample_data) ^ 2 <br>
+<br>
+<br>
+<h3>For Gamma Distribution</h3>
+
+```{r}
+gamma <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  
+  alpha_estimate <- theoretical_mean ^ 2/ theoretical_variance
+  beta_estimate <- theoretical_variance/ theoretical_mean
+  
+  estimators <- list(alpha_estimate, beta_estimate)
+  names(estimators) <- c("Estimated_Alpha", "Estimated_Beta")
+  
+  return(estimators)
+}
+```
+
+<h3>For Binomial Distribution</h3>
+
+```{r}
+binomial <- function(n, sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  # sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  # theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  prob_estimate <- theoretical_mean/ n
+  
+  estimators <- list(prob_estimate)
+  names(estimators) <- c("Estimated_Prob")
+  
+  return(estimators)
+}
+```
+
+<h3>For Normal Distribution</h3>
+
+```{r}
+normal <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  mu_estimate <- theoretical_mean
+  sigma_estimate <- sqrt(theoretical_variance)
+  
+  estimators <- list(mu_estimate, sigma_estimate)
+  names(estimators) <- c("Estimated_Mu", "Estimated_Sigma")
+  
+  return(estimators)
+}
+```
+
+<h3>For Geometric Distribution</h3>
+
+```{r}
+geometric <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  # sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  # theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  prob_estimate <- 1/theoretical_mean
+  
+  estimators <- list(prob_estimate)
+  names(estimators) <- c("Estimated_Prob")
+  
+  return(estimators)
+}
+```
+
+<h3>For Uniform Distribution</h3>
+
+```{r}
+uniform <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  # a = sample_moment1 - sqrt(3 * sample_moment2 - 3 * sample_moment1 ^ 2)
+  # which is:
+  a = theoretical_mean - sqrt(3 * sample_moment2 - 3 * theoretical_mean ^ 2)
+  
+  # b <- sample_moment1 + sqrt(3 * sample_moment2 - 3 * sample_moment1 ^ 2)
+  # which is:
+  b <- theoretical_mean + sqrt(3 * sample_moment2 - 3 * theoretical_mean ^ 2)
+  
+  estimators <- list(a, b)
+  names(estimators) <- c("Estimated_Min", "Estimated_Max")
+  
+  return(estimators)
+}
+```
+
+<h3>For Poisson Distribution</h3>
+
+```{r}
+poisson <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  # sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  # theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  lambda <- theoretical_mean
+  
+  estimators <- list(lambda)
+  names(estimators) <- c("Lambda")
+  
+  return(estimators)
+}
+```
+
+<h3>For Exponential Distribution</h3>
+
+```{r}
+exponential <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  # sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  # theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  beta <- theoretical_mean
+  
+  estimators <- list(beta)
+  names(estimators) <- c("Beta")
+  
+  return(estimators)
+}
+```
+
+<h3>For Beta Distribution</h3>
+
+```{r}
+beta <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  # alpha = (sample_moment1 * (sample_moment1 - sample_moment2)) / (sample_moment2 - sample_moment1 ^ 2)
+  # which is:
+  alpha <- (theoretical_mean * (theoretical_mean - sample_moment2)) / theoretical_variance
+  
+  # beta = ((1 - sample_moment1) * (sample_moment1 - sample_moment2)) / (sample_moment2 - sample_moment1 ^ 2)
+  # which is:
+  beta <- ((1 - theoretical_mean) * (theoretical_mean - sample_moment2)) / theoretical_variance
+  
+  estimators <- list(alpha, beta)
+  names(estimators) <- c("Alpha", "Beta")
+  
+  return(estimators)
+}
+```
+
+<h3>For Multivariate Distribution</h3>
+
+```{r}
+multivariate <- function(sample_data) {
+  
+  sample_moment1 <- mean(sample_data)
+  sample_moment2 <- mean(sample_data ^ 2)
+  
+  theoretical_mean <- sample_moment1 
+  theoretical_variance <- sample_moment2 - theoretical_mean ^ 2
+  
+  mu <- theoretical_mean
+  sigma <- theoretical_variance
+    
+  estimators <- list(mu, sigma)
+  names(estimators) <- c("Mu", "Sigma")
+  
+  return(estimators)
+}
+```
+
+<h2>Wrapper Function for Estimator Compution Functions to Facilitate User Interaction</h2>
+
+```{r}
+# Wrapper Function
+get_estimators <- function(sample_data, distribution_name, n = 100) {
+  
+  if(distribution_name == "normal") {
+    estimator_list <- normal(sample_data)
+    
+  } else if (distribution_name == "binomial") {
+    estimator_list <- binomial(n, sample_data)
+    
+  } else if (distribution_name == "poisson") {
+    estimator_list <- poisson(sample_data)
+    
+  } else if (distribution_name == "gamma") {
+    estimator_list <- gamma(sample_data)
+    
+  } else if (distribution_name == "beta") {
+    estimator_list <- beta(sample_data)
+    
+  } else if (distribution_name == "exponential") {
+    estimator_list <- exponential(sample_data)
+    
+  } else if (distribution_name == "geometric") {
+    estimator_list <- geometric(sample_data)
+    
+  } else if (distribution_name == "uniform") {
+    estimator_list <- uniform(sample_data)
+    
+  } else if (distribution_name == "multivariate") {
+    estimator_list <- multivariate(sample_data)
+    
+  } else {
+    print("Invalid distribution name")
+    
+  }
+  
+  return(estimator_list)
+}
+```
+
+<h2>Function to Get Randomly Generated Data</h2>
+
+```{r}
+get_sample <- function(sample_size, distribution_name, parameter_list) {
+  if(sample_size > 0) {
+    if(distribution_name == "normal") {
+      sample_data <- rnorm(n = sample_size, mean = parameter_list$mu, sd = parameter_list$sigma)
+  
+    } else if (distribution_name == "binomial") {
+      sample_data <- rbinom(n = sample_size, size = parameter_list$n, prob = parameter_list$prob)
+    
+    } else if (distribution_name == "poisson") {
+      sample_data <- rpois(n = sample_size, lambda = parameter_list$lambda)
+    
+    } else if (distribution_name == "gamma") {
+      sample_data <- rgamma(n = sample_size, shape = parameter_list$alpha, rate = parameter_list$beta)
+    
+    } else if (distribution_name == "beta") {
+      sample_data <- rbeta(n = sample_size, shape1 = parameter_list$alpha, shape2 = parameter_list$beta)
+    
+    } else if (distribution_name == "exponential") {
+      sample_data <- rexp(n = sample_size, rate = parameter_list$lambda)
+    
+    } else if (distribution_name == "geometric") {
+      sample_data <- rgeom(n = sample_size, prob = parameter_list$prob)
+    
+    } else if (distribution_name == "uniform") {
+      sample_data <- runif(n = sample_size, min = parameter_list$a, max = parameter_list$b)
+    
+    } else if (distribution_name == "multivariate") {
+      sample_data <- mvrnorm(n = sample_size, mu = parameter_list$mu, Sigma = parameter_list$sigma)
+      
+    } else {
+      print("Invalid distribution name")
+    
+    }
+  } else {
+    print("Invalid sample_size")
+  }
+  
+  return(sample_data)
+}
+```
+
+<h2>Testing Code</h2>
+<h3>Testing get_sample()</h3>
+
+<h4>For Normal Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "normal"
+parameter_list <- list(0, 1)
+names(parameter_list) <- c("mu", "sigma")
+
+normal_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Gamma Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "gamma"
+parameter_list <- list(5, 1)
+names(parameter_list) <- c("alpha", "beta")
+
+gamma_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Binomial Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "binomial"
+n <- 200
+parameter_list <- list(n, 0.5)
+names(parameter_list) <- c("n", "prob")
+
+binomial_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Geometric Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "geometric"
+parameter_list <- list(0.3)
+names(parameter_list) <- c("prob")
+
+geometric_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Beta Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "beta"
+parameter_list <- list(5, 1)
+names(parameter_list) <- c("alpha", "beta")
+
+beta_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Poisson Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "poisson"
+parameter_list <- list(5)
+names(parameter_list) <- c("lambda")
+
+poisson_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Uniform Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "uniform"
+parameter_list <- list(1, 5)
+names(parameter_list) <- c("a", "b")
+
+uniform_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Exponential Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 200
+distribution_name <- "exponential"
+parameter_list <- list(0.5) # beta = 1 / 0.5 = 2
+names(parameter_list) <- c("lambda") # beta = 1/ rate = 1/ lambda
+
+exponential_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h4>For Multivariate Distribution</h4>
+```{r}
+set.seed(123)
+sample_size <- 100
+distribution_name <- "multivariate"
+parameter_list <- list(1, 4)
+names(parameter_list) <- c("mu", "sigma")
+
+multivariate_sample_data <- get_sample(sample_size = sample_size, distribution_name = distribution_name, parameter_list = parameter_list)
+```
+
+<h3>Testing get_estimators()</h3>
+
+<h4>For Normal Distribution</h4>
+```{r}
+estimators <- get_estimators(normal_sample_data, "normal")
+print(estimators)
+```
+
+<h4>For Gamma Distribution</h4>
+```{r}
+estimators <- get_estimators(gamma_sample_data, "gamma")
+print(estimators)
+```
+
+<h4>For Binomial Distribution</h4>
+```{r}
+estimators <- get_estimators(binomial_sample_data, "binomial")
+print(estimators)
+```
+
+<h4>For Geometric Distribution</h4>
+```{r}
+estimators <- get_estimators(geometric_sample_data, "geometric")
+print(estimators)
+```
+
+<h4>For Beta Distribution</h4>
+```{r}
+estimators <- get_estimators(beta_sample_data, "beta")
+print(estimators)
+```
+
+<h4>For Poisson Distribution</h4>
+```{r}
+estimators <- get_estimators(poisson_sample_data, "poisson")
+print(estimators)
+```
+
+<h4>For Uniform Distribution</h4>
+```{r}
+estimators <- get_estimators(uniform_sample_data, "uniform")
+print(estimators)
+```
+
+<h4>For Exponential Distribution</h4>
+```{r}
+estimators <- get_estimators(exponential_sample_data, "exponential")
+print(estimators)
+```
+
+<h4>For Multivariate Distribution</h4>
+```{r}
+estimators <- get_estimators(multivariate_sample_data, "multivariate")
+print(estimators)
+```
+
